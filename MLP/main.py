@@ -33,10 +33,15 @@ if __name__ == "__main__":
     
     #firts_layer_weights = [[0 for col in range(number_of_entries)] for row in range(number_of_neurons)]
     firts_layer_weights = [[0.2, 0.4, 0.5],[0.3, 0.6, 0.7], [0.4, 0.8, 0.3]]
+    second_layer_weights = [[-0.7, 0.6, 0.2, 0.7],[-0.3, 0.7, 0.2, 0.8]]
+    thirdy_layer_weights = [[0.1, 0.8, 0.5]]
     
     second_layer_entries = [-1] + activation_function(multiply_matrix(firts_layer_weights, entries))
-
-    print(second_layer_entries)
+    trirdy_layer_entries = [-1] + activation_function(multiply_matrix(second_layer_weights, second_layer_entries))   
+    
+    result = multiply_matrix(thirdy_layer_weights, trirdy_layer_entries)    
+    
+    print(result)
     
     
     

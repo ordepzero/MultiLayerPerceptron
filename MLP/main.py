@@ -42,17 +42,37 @@ def update_output_layer(targets, outputs,entries, weights):
     
     results = [error*log for error,log in zip(derivative_total_error, derivative_log_function)]
 
+    weights_updated = [[0 for x in range(len(weights[y]))] for y in range(len(weights))] 
     
-
+    #print(weights_updated)
+    
     for i in range(len(results)):
         for j in range(len(entries)):
-            weights[i][j] = weights[i][j] - CONT_LEARNING * (results[i] * entries[j])
+            weights_updated[i][j] = weights[i][j] - CONT_LEARNING * (results[i] * entries[j])
             
             
-    print(weights)
+    #print(weights_updated)
     
-    return weights
+    return weights_updated
 
+def update_hidden_layer(targets, outputs, weights,layer_entries,entries):
+    
+    derivative_total_error = [-(target-out) for target,out in zip(targets, outputs)]
+    derivative_log_function= [out*(1-out) for out in outputs]
+    
+    results = [error*log for error,log in zip(derivative_total_error, derivative_log_function)]
+    
+    results_sum = [[weights[x][y]*results[x] for y in range(len(weights[x]))] for x in range(len(weights))]
+    results_sum = np.sum(results_sum, axis=0)
+    
+    
+    #derivative_log_function= [entry*(1-entry) for entry in layer_entries]    
+    
+    print(results_sum)
+    
+    #print(entries)
+    
+    return 1
 
 if __name__ == "__main__":
     
@@ -63,14 +83,14 @@ if __name__ == "__main__":
     firts_layer_weights = [[0.35, 0.15, 0.20],[0.35, 0.25, 0.30]]
     second_layer_weights= [[0.60, 0.40, 0.45],[0.60, 0.50, 0.55]]
     
-    second_layer_entries = [1] + activation_function(multiply_matrix(firts_layer_weights, entries))
-    outputs = trirdy_layer_entries = activation_function(multiply_matrix(second_layer_weights, second_layer_entries))   
+    second_layer_outputs = [1] + activation_function(multiply_matrix(firts_layer_weights, entries))
+    outputs = trirdy_layer_outputs = activation_function(multiply_matrix(second_layer_weights, second_layer_outputs))   
+    
+        
+    
+    second_layer_weights_updated = update_output_layer(targets, outputs,second_layer_outputs,second_layer_weights)
 
-    #print(error_total(targets, outputs))
-    
-    second_layer_weights = update_output_layer(targets, outputs,second_layer_entries,second_layer_weights)
-    
-    #firts_layer_weights = [[0 for col in range(number_of_entries)] for row in range(number_of_neurons)]
+    update_hidden_layer(targets, outputs,second_layer_weights,second_layer_outputs,entries)
         
     #print(second_layer_entries)
     

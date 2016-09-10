@@ -44,18 +44,16 @@ def update_output_layer(targets, outputs,entries, weights):
 
     weights_updated = [[0 for x in range(len(weights[y]))] for y in range(len(weights))] 
     
-    #print(weights_updated)
-    
+        
     for i in range(len(results)):
         for j in range(len(entries)):
             weights_updated[i][j] = weights[i][j] - CONT_LEARNING * (results[i] * entries[j])
             
-            
-    #print(weights_updated)
+
     
     return weights_updated
 
-def update_hidden_layer(targets, outputs, weights,layer_entries,entries):
+def update_hidden_layer(targets, outputs, weights,layer_entries,entries,weights_to_update):
     
     derivative_total_error = [-(target-out) for target,out in zip(targets, outputs)]
     derivative_log_function= [out*(1-out) for out in outputs]
@@ -66,13 +64,19 @@ def update_hidden_layer(targets, outputs, weights,layer_entries,entries):
     results_sum = np.sum(results_sum, axis=0)
     
     
-    #derivative_log_function= [entry*(1-entry) for entry in layer_entries]    
+    layer_entries_difference = [entry*(1-entry) for entry in layer_entries]    
     
-    print(results_sum)
+    results_sum = np.delete(results_sum, 0)
+    layer_entries_difference = np.delete(layer_entries_difference, 0)  
     
-    #print(entries)
+    temp = [x * y for x,y in zip(results_sum, layer_entries_difference)] 
+    temp_mult = [[x*y for y in entries]  for x in temp]
     
-    return 1
+
+    
+    weights_updated = [[w-(t*CONT_LEARNING) for w,t in zip(ww,tt)] for ww,tt in zip(weights_to_update,temp_mult)]
+    
+    return weights_updated
 
 if __name__ == "__main__":
     
@@ -84,13 +88,12 @@ if __name__ == "__main__":
     second_layer_weights= [[0.60, 0.40, 0.45],[0.60, 0.50, 0.55]]
     
     second_layer_outputs = [1] + activation_function(multiply_matrix(firts_layer_weights, entries))
-    outputs = trirdy_layer_outputs = activation_function(multiply_matrix(second_layer_weights, second_layer_outputs))   
-    
-        
+    outputs = trirdy_layer_outputs = activation_function(multiply_matrix(second_layer_weights, second_layer_outputs))          
     
     second_layer_weights_updated = update_output_layer(targets, outputs,second_layer_outputs,second_layer_weights)
 
-    update_hidden_layer(targets, outputs,second_layer_weights,second_layer_outputs,entries)
+    first_layer_weights_updated = update_hidden_layer(targets, outputs,second_layer_weights,second_layer_outputs,entries,firts_layer_weights)
+            
         
     #print(second_layer_entries)
     

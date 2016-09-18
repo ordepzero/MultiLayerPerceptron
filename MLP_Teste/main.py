@@ -1,41 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Sep 17 23:43:44 2016
+Created on Tue Sep  6 18:07:39 2016
 
 @author: PeDeNRiQue
 """
-
 import math
 import numpy as np
 
 
 CONT_LEARNING = 0.5
-N_NEURONE_FIRST_LAYER = 4
-N_NEURONE_SECON_LAYER = 5
-
-weights_input = []#MATRIZ DE PESOS DA CAMADA DE ENTRADA
-weights_inter = []#MATRIZ DE PESOS DA CAMADA INTERMEDIATIA
-weights_outpt = []#MATRIZ DE PESOS DA CAMADA DE SAIDA
-
-def normalize_data(f,has_target=True):
-    
-    x = np.array(f)
-    x_normed = (x - x.min(axis=0))/ (x.max(axis=0) - x.min(axis=0))
-    
-    #SUBSTITUIO OS VALORES ALVO DA ULTIMA COLUNA NOS DADOS NORMALIZADOS
-    if(has_target):
-        x_normed[:,-1] = f[:,-1]
-
-    return x_normed
-
-def put_file_int_array(filename):
-    array = []
-    
-    with open(filename,"r") as f:
-        content = f.readlines()
-        for line in content: # read rest of lines
-            array.append([float(x) for x in line.split()])   
-    return np.array(array);
 
 def tangente_hyperbolique(a):
     
@@ -106,65 +79,24 @@ def update_hidden_layer(targets, outputs, weights,layer_entries,entries,weights_
     
     return weights_updated
 
-
-def alg(entries,target):
-    #ADICIONA A ENTRADA COM VALOR '1' ESTA RELACIONADO AO BIAS
-    entries = np.append(1, entries)
-
-    #print(str(entries)+" "+str(target))
-    
-    
-    
-    #print(second_layer_weights)
-    
-
 if __name__ == "__main__":
     
-    N_NEURONE_FIRST_LAYER = 4
-    N_NEURONE_SECON_LAYER = 2
-    N_NEURONE_OUTPT_LAYER = 1
     
-    filename = "C:/Users/PeDeNRiQue/Copy/USP/Disciplinas/RedeNeurais/Atividades/Projetos/Projeto1/base/seeds.txt"
+    entries = [1, 0.05, 0.1]
+    targets = [0.01, 0.99]
+    
+    firts_layer_weights = [[0.35, 0.15, 0.20],[0.35, 0.25, 0.30]]
+    second_layer_weights= [[0.60, 0.40, 0.45],[0.60, 0.50, 0.55]]
+    
+    second_layer_outputs = [1] + activation_function(multiply_matrix(firts_layer_weights, entries))
+    outputs = trirdy_layer_outputs = activation_function(multiply_matrix(second_layer_weights, second_layer_outputs))          
+    
+    second_layer_weights_updated = update_output_layer(targets, outputs,second_layer_outputs,second_layer_weights)
 
-    data = normalize_data(put_file_int_array(filename))
-    
-    
-    entries = data[:,:-1]
-    targets = data[:,-1]
-    entries = [np.append(1, x)  for x in entries]    
-    
-    print(len(targets))
-    
-    weights_input = np.random.random((N_NEURONE_FIRST_LAYER,len(entries[0])))
-    weights_inter = np.random.random((N_NEURONE_SECON_LAYER,1 + N_NEURONE_FIRST_LAYER)) 
-    weights_outpt = np.random.random((N_NEURONE_OUTPT_LAYER,1 + N_NEURONE_SECON_LAYER)) 
-      
-    
-    first_hidden_layer = [1] + activation_function(multiply_matrix(weights_input, entries[0]))
-    secnd_hidden_layer = [1] + activation_function(multiply_matrix(weights_inter, first_hidden_layer))
-    output_layer = activation_function(multiply_matrix(weights_outpt, secnd_hidden_layer))
-    
-    print(output_layer)
-    
-    #[alg(x,y) for x,y in zip(entries, targets)] 
-    
-    #entries = [1, 0.05, 0.1]
-    #targets = [0.01, 0.99]
-    
-    #firts_layer_weights = [[0.35, 0.15, 0.20],[0.35, 0.25, 0.30]]
-    #second_layer_weights= [[0.60, 0.40, 0.45],[0.60, 0.50, 0.55]]
-    
-    #second_layer_outputs = [1] + activation_function(multiply_matrix(firts_layer_weights, entries))
-    #outputs = trirdy_layer_outputs = activation_function(multiply_matrix(second_layer_weights, second_layer_outputs))          
-    
-    #second_layer_weights_updated = update_output_layer(targets, outputs,second_layer_outputs,second_layer_weights)
-
-    #first_layer_weights_updated = update_hidden_layer(targets, outputs,second_layer_weights,second_layer_outputs,entries,firts_layer_weights)
+    first_layer_weights_updated = update_hidden_layer(targets, outputs,second_layer_weights,second_layer_outputs,entries,firts_layer_weights)
             
         
     #print(second_layer_entries)
-        
-    print("FUNCAO MAIN")
     
 '''   
 if __name__ == "__main__":
@@ -186,4 +118,3 @@ if __name__ == "__main__":
     
 '''    
     
-

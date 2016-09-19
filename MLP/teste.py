@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Sep 17 23:43:44 2016
+Created on Sun Sep 18 11:37:05 2016
 
 @author: PeDeNRiQue
 """
@@ -9,7 +9,7 @@ import math
 import numpy as np
 
 
-CONT_LEARNING = 0.5
+CONT_LEARNING = 0.5 
 N_NEURONE_FIRST_LAYER = 4
 N_NEURONE_SECON_LAYER = 5
 
@@ -62,13 +62,12 @@ def error_total(targets, outs):
  
 def update_output_layer(targets, outputs,entries, weights):
     
-    #print(targets, outputs,entries)
-    
+    #DELTA = -(TARGET - OUT) * OUT*(1 - OUT)
     derivative_total_error = [-(target-out) for target,out in zip(targets, outputs)]
     derivative_log_function= [out*(1-out) for out in outputs]
-    
     results = [error*log for error,log in zip(derivative_total_error, derivative_log_function)]
-
+    #print("-> ",targets," ", outputs," ",entries," ", weights)
+    
     weights_updated = [[0 for x in range(len(weights[y]))] for y in range(len(weights))] 
     
         
@@ -80,52 +79,48 @@ def update_output_layer(targets, outputs,entries, weights):
     
     return weights_updated
 
-def update_hidden_layer(targets, outputs, weights,layer_entries,entries,weights_to_update):
+def update_hidden_layer(targets, outputs, front_entries, front_weights,entries,weights_to_update):
     
     
     #DELTA = -(TARGET - OUT) * OUT*(1 - OUT)
     derivative_total_error = [-(target-out) for target,out in zip(targets, outputs)]    
     derivative_log_function= [out*(1-out) for out in outputs]    
-    results = [error*log for error,log in zip(derivative_total_error, derivative_log_function)]
+    delta = [error*log for error,log in zip(derivative_total_error, derivative_log_function)]
     
-      
-    print("- ",results," ",weights) 
-    results_sum = [[weights[x][y]*results[x] for y in range(len(weights[x]))] for x in range(len(weights))]
+    #print("DELTA: ",delta)    
     
+    results_sum = [[front_weights[x][y]*delta[x] for y in range(len(front_weights[x]))] for x in range(len(front_weights))]    
+    results_sum = np.sum(results_sum,axis=0)[1:]
+    front_entries = front_entries[1:]
+    #print("RESULTADO :",results_sum,front_entries,entries," #")    
     
-    results_sum = np.sum(results_sum, axis=0)
+    error = [[x*y*(1-y)*z for z in entries] for x,y in zip(results_sum,front_entries)]
+        
     
-    layer_entries_difference = [entry*(1-entry) for entry in layer_entries]    
-    
-    results_sum = np.delete(results_sum, 0)
-    layer_entries_difference = np.delete(layer_entries_difference, 0)  
-    
-    temp = [x * y for x,y in zip(results_sum, layer_entries_difference)] 
-    temp_mult = [[x*y for y in entries]  for x in temp]
-    
-    weights_updated = [[w-(t*CONT_LEARNING) for w,t in zip(ww,tt)] for ww,tt in zip(weights_to_update,temp_mult)]
-    
-    #print("- ",layer_entries)
+    weights_updated = [[s+(CONT_LEARNING * y) for y,s in zip(x,w)] for x,w in zip(error,weights_to_update)]
+    #print(weights_updated)
     
     return weights_updated
-
+    
 
 def alg(entries,target):
     first_hidden_layer = [1] + activation_function(multiply_matrix(weights_input, entries))
     secnd_hidden_layer = [1] + activation_function(multiply_matrix(weights_inter, first_hidden_layer))
+    #print("---",secnd_hidden_layer)
     output_layer = activation_function(multiply_matrix(weights_outpt, secnd_hidden_layer))
     
-    target = [0] + target    
     
-    
-    if(abs(output_layer - target) > 0.01):
+    if(abs(np.array(output_layer) - np.array(target)) > 0.01):
         weights_outpt_updated = update_output_layer(target, output_layer,secnd_hidden_layer,weights_outpt)
-        weights_inter_updated = update_hidden_layer(target, output_layer,weights_outpt,secnd_hidden_layer,first_hidden_layer,weights_inter)
-        print("SECOND")        
-        weights_input_updated = update_hidden_layer(target, output_layer,weights_inter,first_hidden_layer,entries,weights_input)
+        weights_inter_updated = update_hidden_layer(target, output_layer,secnd_hidden_layer,weights_outpt,first_hidden_layer,weights_inter)
+       
+        
+        #weights_inter_updated = update_hidden_layer(target, output_layer,weights_outpt,secnd_hidden_layer,first_hidden_layer,weights_inter)
+        #print("SECOND")        
+        #weights_input_updated = update_hidden_layer(target, output_layer,weights_inter,first_hidden_layer,entries,weights_input)
       
         
-        print(weights_input_updated)
+        print(weights_inter_updated)
         
     
 
@@ -133,23 +128,18 @@ if __name__ == "__main__":
     
     N_NEURONE_FIRST_LAYER = 2
     N_NEURONE_SECON_LAYER = 2
-    N_NEURONE_OUTPT_LAYER = 1
+    N_NEURONE_OUTPT_LAYER = 1    
     
-    filename = "seeds.txt"
-
-    data = normalize_data(put_file_int_array(filename))
+    entries = [1, 0.1, 0.6] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA
+    targets = [0.9] #COPIAR ULTIMA COLUNA
     
-    
-    entries = data[:,:-1] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA
-    targets = data[:,-1] #COPIAR ULTIMA COLUNA
-    entries = [np.append(1, x)  for x in entries]  
-    
-    weights_input = np.random.random((N_NEURONE_FIRST_LAYER,len(entries[0])))
-    weights_inter = np.random.random((N_NEURONE_SECON_LAYER,1 + N_NEURONE_FIRST_LAYER)) 
-    weights_outpt = np.random.random((N_NEURONE_OUTPT_LAYER,1 + N_NEURONE_SECON_LAYER)) 
+    weights_input = [[0.3, 0.2, 0.1],[0.3, 0.3, 0.2]]
+    weights_inter = [[0.4, 0.4, 0.1],[0.4, 0.6, 0.3]]
+    weights_outpt = [[0.5, 0.4, 0.8]]
     
     #print(targets)
-    [alg(x,y) for x,y in zip(entries, targets)] 
+    
+    alg(entries, targets)
     
     #entries = [1, 0.05, 0.1]
     #targets = [0.01, 0.99]

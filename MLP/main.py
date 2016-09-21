@@ -119,16 +119,7 @@ def alg(entries,target,weights_outpt,weights_inter,weights_input):
             break
     return error,weights_outpt,weights_inter,weights_input #TEM QUE FICAR FORA DO WHILE
         
-if __name__ == "__main__":
-    
-    N_NEURONE_FIRST_LAYER = 100
-    N_NEURONE_SECON_LAYER = 100
-    N_NEURONE_OUTPT_LAYER = 1
-    
-    filename = "seeds.txt"
-
-    data = normalize_data(put_file_int_array(filename),False)
-    
+def trainning(data):
     
     entries = data[:,:-1] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA
     targets = data[:,-1] #COPIAR ULTIMA COLUNA
@@ -138,27 +129,56 @@ if __name__ == "__main__":
     weights_inter = (np.random.random((N_NEURONE_SECON_LAYER,1 + N_NEURONE_FIRST_LAYER)) - 0.5) * 2
     weights_outpt = (np.random.random((N_NEURONE_OUTPT_LAYER,1 + N_NEURONE_SECON_LAYER)) - 0.5) * 2
     
-        
-    
-    print(weights_input)    
-    
-    #print(data)
-    '''
-    #print(targets)
     epoch = 0
     while True:
         print("Epoca: ",epoch)
         error_total = 0
         for cont in range(len(entries)):
-            print("Amostra: ",cont)
+            #print("Amostra: ",cont)
             error,weights_outpt,weights_inter,weights_input = alg(entries[cont], targets[cont],weights_outpt,weights_inter,weights_input)
             error_total = error_total + error
             
         error_total_m = error_total / len(entries)
         epoch = epoch + 1
-        if(error_total < 0.001):
+        print(error_total_m)
+        if(error_total_m < 0.001):
             break
-    '''       
+        
+    return weights_outpt,weights_inter,weights_input
+
+
+def test_net(test,weights_outpt,weights_inter,weights_input):
+    return "OPA"
+
+if __name__ == "__main__":
+    
+    N_NEURONE_FIRST_LAYER = 20
+    N_NEURONE_SECON_LAYER = 20
+    N_NEURONE_OUTPT_LAYER = 1
+    
+    filename = "teste1.txt"
+
+    data = normalize_data(put_file_int_array(filename),False)
+    
+    folds = 10
+    parts = np.array_split(data, folds)
+
+    for fold in range(folds):
+        train = []
+        test  = []
+        
+        for f in range(folds):
+            if(f == fold):
+                test = parts[f]
+            else:
+                if(len(train) == 0):
+                    train = parts[f]
+                else:
+                    train = np.append(train,parts[f], axis=0)
+    
+        
+        weights_outpt,weights_inter,weights_input = trainning(train)
+        test_net(test,weights_outpt,weights_inter,weights_input)
     print("FUNCAO MAIN")
     
 

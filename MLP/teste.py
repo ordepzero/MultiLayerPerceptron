@@ -122,7 +122,7 @@ def alg(entries,target):
 if __name__ == "__main__":
     
     N_NEURONE_FIRST_LAYER = 2
-    N_NEURONE_SECON_LAYER = 10
+    N_NEURONE_SECON_LAYER = 2
     N_NEURONE_OUTPT_LAYER = 1    
     
     entries = [1, 0.1, 0.6] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA

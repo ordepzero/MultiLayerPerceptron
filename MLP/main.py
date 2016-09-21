@@ -56,7 +56,7 @@ def activation_function(values):
    #print(values)
    return values
     
-def error_total(targets, outs):
+def calculate_error_total(targets, outs):
      result =  [pow((target - out),2)/2 for target,out in zip(targets, outs)]
      return sum(result)   
  
@@ -96,81 +96,69 @@ def update_hidden_layer(delta_in, front_entries, front_weights,entries,weights_t
     return weights_updated,delta
 
 
-def alg(entries,target):
-    first_hidden_layer = [1] + activation_function(multiply_matrix(weights_input, entries))
-    secnd_hidden_layer = [1] + activation_function(multiply_matrix(weights_inter, first_hidden_layer))
-    output_layer = activation_function(multiply_matrix(weights_outpt, secnd_hidden_layer))
-    
-    target = [0] + target    
-    
-    
-    if(abs(output_layer - target) > 0.01):
-        weights_outpt_updated,delta = update_output_layer(target, output_layer,secnd_hidden_layer,weights_outpt)            
-        weights_inter_updated,delta = update_hidden_layer(delta,secnd_hidden_layer,weights_outpt,first_hidden_layer,weights_inter)
-        print("PRIMEIRA")
-        weights_input_updated,delta = update_hidden_layer(delta,first_hidden_layer,weights_inter,entries,weights_input)
-        
-        print(delta)
+def alg(entries,target,weights_outpt,weights_inter,weights_input):
         
     
-
+    while True:
+        first_hidden_layer = [1] + activation_function(multiply_matrix(weights_input, entries))
+        secnd_hidden_layer = [1] + activation_function(multiply_matrix(weights_inter, first_hidden_layer))
+        output_layer = activation_function(multiply_matrix(weights_outpt, secnd_hidden_layer))
+        
+        target = [0] + target
+        error = pow(output_layer - target,2)/2.0
+        if(error > 0.01):
+            #print(error)
+            weights_outpt_updated,delta = update_output_layer(target, output_layer,secnd_hidden_layer,weights_outpt)            
+            weights_inter_updated,delta = update_hidden_layer(delta,secnd_hidden_layer,weights_outpt,first_hidden_layer,weights_inter)
+            weights_input_updated,delta = update_hidden_layer(delta,first_hidden_layer,weights_inter,entries,weights_input)
+            
+            weights_outpt = weights_outpt_updated
+            weights_inter = weights_inter_updated
+            weights_input = weights_input_updated
+        else:
+            break
+    return error,weights_outpt,weights_inter,weights_input #TEM QUE FICAR FORA DO WHILE
+        
 if __name__ == "__main__":
     
-    N_NEURONE_FIRST_LAYER = 2
-    N_NEURONE_SECON_LAYER = 2
+    N_NEURONE_FIRST_LAYER = 100
+    N_NEURONE_SECON_LAYER = 100
     N_NEURONE_OUTPT_LAYER = 1
     
     filename = "seeds.txt"
 
-    data = normalize_data(put_file_int_array(filename))
+    data = normalize_data(put_file_int_array(filename),False)
     
     
     entries = data[:,:-1] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA
     targets = data[:,-1] #COPIAR ULTIMA COLUNA
     entries = [np.append(1, x)  for x in entries]  
     
-    weights_input = np.random.random((N_NEURONE_FIRST_LAYER,len(entries[0])))
-    weights_inter = np.random.random((N_NEURONE_SECON_LAYER,1 + N_NEURONE_FIRST_LAYER)) 
-    weights_outpt = np.random.random((N_NEURONE_OUTPT_LAYER,1 + N_NEURONE_SECON_LAYER)) 
+    weights_input = (np.random.random((N_NEURONE_FIRST_LAYER,len(entries[0]))) - 0.5) * 2
+    weights_inter = (np.random.random((N_NEURONE_SECON_LAYER,1 + N_NEURONE_FIRST_LAYER)) - 0.5) * 2
+    weights_outpt = (np.random.random((N_NEURONE_OUTPT_LAYER,1 + N_NEURONE_SECON_LAYER)) - 0.5) * 2
     
+        
+    
+    print(weights_input)    
+    
+    #print(data)
+    '''
     #print(targets)
-    [alg(x,y) for x,y in zip(entries, targets)] 
-    
-    #entries = [1, 0.05, 0.1]
-    #targets = [0.01, 0.99]
-    
-    #firts_layer_weights = [[0.35, 0.15, 0.20],[0.35, 0.25, 0.30]]
-    #second_layer_weights= [[0.60, 0.40, 0.45],[0.60, 0.50, 0.55]]
-    
-    #second_layer_outputs = [1] + activation_function(multiply_matrix(firts_layer_weights, entries))
-    #outputs = trirdy_layer_outputs = activation_function(multiply_matrix(second_layer_weights, second_layer_outputs))          
-    
-    #second_layer_weights_updated = update_output_layer(targets, outputs,second_layer_outputs,second_layer_weights)
-    #first_layer_weights_updated = update_hidden_layer(targets, outputs,second_layer_weights,second_layer_outputs,entries,firts_layer_weights)
+    epoch = 0
+    while True:
+        print("Epoca: ",epoch)
+        error_total = 0
+        for cont in range(len(entries)):
+            print("Amostra: ",cont)
+            error,weights_outpt,weights_inter,weights_input = alg(entries[cont], targets[cont],weights_outpt,weights_inter,weights_input)
+            error_total = error_total + error
             
-        
-    #print(second_layer_entries)
-        
+        error_total_m = error_total / len(entries)
+        epoch = epoch + 1
+        if(error_total < 0.001):
+            break
+    '''       
     print("FUNCAO MAIN")
-    
-'''   
-if __name__ == "__main__":
-    
-    
-    entries = [-1, 0.3, 0.7]
-    
-    #firts_layer_weights = [[0 for col in range(number_of_entries)] for row in range(number_of_neurons)]
-    firts_layer_weights = [[0.2, 0.4, 0.5],[0.3, 0.6, 0.7], [0.4, 0.8, 0.3]]
-    second_layer_weights = [[-0.7, 0.6, 0.2, 0.7],[-0.3, 0.7, 0.2, 0.8]]
-    thirdy_layer_weights = [[0.1, 0.8, 0.5]]
-    
-    second_layer_entries = [-1] + activation_function(multiply_matrix(firts_layer_weights, entries))
-    trirdy_layer_entries = [-1] + activation_function(multiply_matrix(second_layer_weights, second_layer_entries))   
-    
-    output = multiply_matrix(thirdy_layer_weights, trirdy_layer_entries)    
-    
-    print(output)
-    
-'''    
     
 

@@ -106,7 +106,7 @@ def alg(entries,target,weights_outpt,weights_inter,weights_input):
         
         target = [0] + target
         error = pow(output_layer - target,2)/2.0
-        if(error > 0.01):
+        if(error > 0.1):
             #print(error)
             weights_outpt_updated,delta = update_output_layer(target, output_layer,secnd_hidden_layer,weights_outpt)            
             weights_inter_updated,delta = update_hidden_layer(delta,secnd_hidden_layer,weights_outpt,first_hidden_layer,weights_inter)
@@ -141,19 +141,41 @@ def trainning(data):
         error_total_m = error_total / len(entries)
         epoch = epoch + 1
         print(error_total_m)
-        if(error_total_m < 0.001):
+        if(error_total_m < 0.01):
             break
         
     return weights_outpt,weights_inter,weights_input
 
+def calculate_output(entries,weights_outpt,weights_inter,weights_input):
+    first_hidden_layer = [1] + activation_function(multiply_matrix(weights_input, entries))
+    secnd_hidden_layer = [1] + activation_function(multiply_matrix(weights_inter, first_hidden_layer))
+    output_layer = activation_function(multiply_matrix(weights_outpt, secnd_hidden_layer))
 
-def test_net(test,weights_outpt,weights_inter,weights_input):
+    return output_layer
+    
+def test_net(data,weights_outpt,weights_inter,weights_input):
+    data = np.array(data)
+
+    entries = data[:,:-1] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA
+    targets = data[:,-1] #COPIAR ULTIMA COLUNA
+    entries = [np.append(1, x)  for x in entries]
+    
+    cont = 0
+    error_total = 0
+    for entry,target in zip(entries,targets):
+        cont = cont + 1    
+        result = calculate_output(entry,weights_outpt,weights_inter,weights_input)
+        error = pow(target - result,2)/2
+        error_total = error_total + error
+        #print(cont,result,error)
+    print(error_total/cont)
+        
     return "OPA"
 
 if __name__ == "__main__":
     
-    N_NEURONE_FIRST_LAYER = 20
-    N_NEURONE_SECON_LAYER = 20
+    N_NEURONE_FIRST_LAYER = 150
+    N_NEURONE_SECON_LAYER = 150
     N_NEURONE_OUTPT_LAYER = 1
     
     filename = "teste1.txt"
@@ -167,7 +189,7 @@ if __name__ == "__main__":
         train = []
         test  = []
         
-        for f in range(folds):
+        for f in range(2):
             if(f == fold):
                 test = parts[f]
             else:

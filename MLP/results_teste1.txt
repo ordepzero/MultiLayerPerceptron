@@ -1,1 +1,6 @@
-Nome do arquivo: teste1.txt150 150 1BASE DE TREINO:0.75ERRO QUADRADO MEDIO: [ 0.0170032]
+Numero de camadas: 1
+
+Nome do arquivo: teste1.txt
+150  1
+BASE DE TREINO (%):0.75
+Ciclos: 4ERRO QUADRADO MEDIO: 0.0211560374634

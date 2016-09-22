@@ -9,9 +9,7 @@ import math
 import numpy as np
 
 
-CONT_LEARNING = 0.5
-N_NEURONE_FIRST_LAYER = 4
-N_NEURONE_SECON_LAYER = 5
+CONT_LEARNING = 0.25
 
 weights_input = []#MATRIZ DE PESOS DA CAMADA DE ENTRADA
 weights_inter = []#MATRIZ DE PESOS DA CAMADA INTERMEDIATIA
@@ -120,16 +118,17 @@ def alg(entries,target,weights_outpt,weights_inter,weights_input):
     return error,weights_outpt,weights_inter,weights_input #TEM QUE FICAR FORA DO WHILE
         
 def trainning(data):
-    
     entries = data[:,:-1] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA
     targets = data[:,-1] #COPIAR ULTIMA COLUNA
     entries = [np.append(1, x)  for x in entries]  
+    
     
     weights_input = (np.random.random((N_NEURONE_FIRST_LAYER,len(entries[0]))) - 0.5) * 2
     weights_inter = (np.random.random((N_NEURONE_SECON_LAYER,1 + N_NEURONE_FIRST_LAYER)) - 0.5) * 2
     weights_outpt = (np.random.random((N_NEURONE_OUTPT_LAYER,1 + N_NEURONE_SECON_LAYER)) - 0.5) * 2
     
     epoch = 0
+    last_error = 0
     while True:
         print("Epoca: ",epoch)
         error_total = 0
@@ -140,9 +139,10 @@ def trainning(data):
             
         error_total_m = error_total / len(entries)
         epoch = epoch + 1
-        print(error_total_m)
-        if(error_total_m < 0.01):
-            break
+        print("ERROR TOTAL MEDIO: ",error_total_m,last_error)
+        if(error_total_m < 0.01 or last_error == error_total_m):
+            return weights_outpt,weights_inter,weights_input
+        last_error = error_total_m
         
     return weights_outpt,weights_inter,weights_input
 
@@ -159,7 +159,6 @@ def test_net(data,weights_outpt,weights_inter,weights_input):
     entries = data[:,:-1] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA
     targets = data[:,-1] #COPIAR ULTIMA COLUNA
     entries = [np.append(1, x)  for x in entries]
-    
     cont = 0
     error_total = 0
     for entry,target in zip(entries,targets):
@@ -168,7 +167,7 @@ def test_net(data,weights_outpt,weights_inter,weights_input):
         error = pow(target - result,2)/2
         error_total = error_total + error
         #print(cont,result,error)
-    print(error_total/cont)
+    print("ERRO QUADRATICO MEDIO:",error_total/cont)
         
     return "OPA"
 
@@ -182,25 +181,36 @@ if __name__ == "__main__":
 
     data = normalize_data(put_file_int_array(filename),False)
     
-    folds = 10
-    parts = np.array_split(data, folds)
-
-    for fold in range(folds):
-        train = []
-        test  = []
-        
-        for f in range(2):
-            if(f == fold):
-                test = parts[f]
-            else:
-                if(len(train) == 0):
-                    train = parts[f]
-                else:
-                    train = np.append(train,parts[f], axis=0)
+    #folds = 10
+    #parts = np.array_split(data, folds)
     
-        
-        weights_outpt,weights_inter,weights_input = trainning(train)
-        test_net(test,weights_outpt,weights_inter,weights_input)
+    p_train = 0.75
+    size_total = len(data)
+    size_train = int(size_total*p_train)
+    train = data[0:size_train]
+    test  = data[size_train:]
+    
+    weights_outpt,weights_inter,weights_input = trainning(train)
+    test_net(test,weights_outpt,weights_inter,weights_input)
+    
     print("FUNCAO MAIN")
     
+''' 
+#IMPLEMENTAÇÃO DO X_FOLD
+for fold in range(folds):
+    train = []
+    test  = []
+    
+    for f in range(folds):
+        if(f == fold):
+            test = parts[f]
+        else:
+            if(len(train) == 0):
+                train = parts[f]
+            else:
+                train = np.append(train,parts[f], axis=0)
 
+    
+    weights_outpt,weights_inter,weights_input = trainning(train)
+    test_net(test,weights_outpt,weights_inter,weights_input)
+'''

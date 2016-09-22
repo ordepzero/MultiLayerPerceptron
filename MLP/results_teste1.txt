@@ -1,0 +1,1 @@
+Nome do arquivo: teste1.txt150 150 1BASE DE TREINO:0.75ERRO QUADRADO MEDIO: [ 0.0170032]

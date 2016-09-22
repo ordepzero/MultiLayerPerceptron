@@ -10,6 +10,7 @@ import numpy as np
 
 
 CONT_LEARNING = 0.25
+ALFA = 0.1
 
 weights_input = []#MATRIZ DE PESOS DA CAMADA DE ENTRADA
 weights_inter = []#MATRIZ DE PESOS DA CAMADA INTERMEDIATIA
@@ -58,7 +59,7 @@ def calculate_error_total(targets, outs):
      result =  [pow((target - out),2)/2 for target,out in zip(targets, outs)]
      return sum(result)   
  
-def update_output_layer(targets, outputs,entries, weights):    
+def update_output_layer(targets, outputs,entries, weights, weights_m):    
     #DELTA = -(TARGET - OUT) * OUT*(1 - OUT)
     derivative_total_error = [-(target-out) for target,out in zip(targets, outputs)]
     derivative_log_function= [out*(1-out) for out in outputs]
@@ -72,13 +73,13 @@ def update_output_layer(targets, outputs,entries, weights):
     for i in range(len(delta)):
         for j in range(len(entries)):
             #print("< ", weights[i][j] , CONT_LEARNING , delta[i] , entries[j]," >")
-            weights_updated[i][j] = weights[i][j] + CONT_LEARNING * (-delta[i] * entries[j])
+            weights_updated[i][j] = weights[i][j] + CONT_LEARNING * (-delta[i] * entries[j]) + (ALFA * weights_m[i][j])
             
             
     return weights_updated,delta
 
 
-def update_hidden_layer(delta_in, front_entries, front_weights,entries,weights_to_update):
+def update_hidden_layer(delta_in, front_entries, front_weights,entries,weights_to_update, weights_m):
     front_entries = front_entries[1:]
     front_weights = [x[1:] for x in front_weights]
     
@@ -89,12 +90,12 @@ def update_hidden_layer(delta_in, front_entries, front_weights,entries,weights_t
     delta = np.sum(delta,axis=0)
     #print(delta)
     delta = [d*fe*(1-fe) for fe,d in zip(front_entries,delta)]    
-    weights_updated = [[weights_to_update[d][w]+CONT_LEARNING*(-delta[d])*entries[w] for w in range(len(weights_to_update[d]))] for d in range(len(delta))]
+    weights_updated = [[weights_to_update[d][w]+CONT_LEARNING*(-delta[d])*entries[w] + (ALFA * weights_m[d][w]) for w in range(len(weights_to_update[d]))] for d in range(len(delta))]
     
     return weights_updated,delta
 
 
-def alg(entries,target,weights_outpt,weights_inter,weights_input):
+def alg(entries,target,weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m):
         
     
     while True:
@@ -106,17 +107,32 @@ def alg(entries,target,weights_outpt,weights_inter,weights_input):
         error = pow(output_layer - target,2)/2.0
         if(error > 0.1):
             #print(error)
-            weights_outpt_updated,delta = update_output_layer(target, output_layer,secnd_hidden_layer,weights_outpt)            
-            weights_inter_updated,delta = update_hidden_layer(delta,secnd_hidden_layer,weights_outpt,first_hidden_layer,weights_inter)
-            weights_input_updated,delta = update_hidden_layer(delta,first_hidden_layer,weights_inter,entries,weights_input)
+            weights_outpt_updated,delta = update_output_layer(target, output_layer,secnd_hidden_layer,weights_outpt,weights_outpt_m)            
+            weights_inter_updated,delta = update_hidden_layer(delta,secnd_hidden_layer,weights_outpt,first_hidden_layer,weights_inter,weights_inter_m)
+            weights_input_updated,delta = update_hidden_layer(delta,first_hidden_layer,weights_inter,entries,weights_input,weights_input_m)
+            
+            weights_outpt_updatedt = np.array(weights_outpt_updated)
+            weights_inter_updatedt = np.array(weights_inter_updated)
+            weights_input_updatedt = np.array(weights_input_updated)
+            
+            weights_outpt_m = weights_outpt_updatedt - weights_outpt
+            weights_inter_m = weights_inter_updatedt - weights_inter
+            weights_input_m = weights_input_updatedt - weights_input
             
             weights_outpt = weights_outpt_updated
             weights_inter = weights_inter_updated
             weights_input = weights_input_updated
         else:
             break
-    return error,weights_outpt,weights_inter,weights_input #TEM QUE FICAR FORA DO WHILE
+    return error,weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m #TEM QUE FICAR FORA DO WHILE
+
+def inicialize_matrix_zeros(rows, columns):
+    grade = [0] * rows
+    for i in range(rows):
+        grade[i] = [0] * columns 
         
+    return np.array(grade)
+    
 def trainning(data):
     entries = data[:,:-1] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA
     targets = data[:,-1] #COPIAR ULTIMA COLUNA
@@ -127,6 +143,11 @@ def trainning(data):
     weights_inter = (np.random.random((N_NEURONE_SECON_LAYER,1 + N_NEURONE_FIRST_LAYER)) - 0.5) * 2
     weights_outpt = (np.random.random((N_NEURONE_OUTPT_LAYER,1 + N_NEURONE_SECON_LAYER)) - 0.5) * 2
     
+    #WEOGHTS TO MOMENTUM
+    weights_input_m = inicialize_matrix_zeros(N_NEURONE_FIRST_LAYER,len(entries[0]))
+    weights_inter_m = inicialize_matrix_zeros(N_NEURONE_SECON_LAYER,1 + N_NEURONE_FIRST_LAYER)
+    weights_outpt_m = inicialize_matrix_zeros(N_NEURONE_OUTPT_LAYER,1 + N_NEURONE_SECON_LAYER)
+    
     epoch = 0
     last_error = 0
     while True:
@@ -134,7 +155,7 @@ def trainning(data):
         error_total = 0
         for cont in range(len(entries)):
             #print("Amostra: ",cont)
-            error,weights_outpt,weights_inter,weights_input = alg(entries[cont], targets[cont],weights_outpt,weights_inter,weights_input)
+            error,weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m = alg(entries[cont], targets[cont],weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m)
             error_total = error_total + error
             
         error_total_m = error_total / len(entries)

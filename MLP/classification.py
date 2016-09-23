@@ -9,9 +9,9 @@ import math
 import numpy as np
 
 
+ALFA = 0.01 #MOMENTUM
 CONT_LEARNING = 0.25
-P_TRAIN = 0.75
-ALFA = 0.1
+P_TRAIN = 0.7
 
 weights_input = []#MATRIZ DE PESOS DA CAMADA DE ENTRADA
 weights_inter = []#MATRIZ DE PESOS DA CAMADA INTERMEDIATIA
@@ -132,7 +132,7 @@ def update_hidden_layer(delta_in, front_entries, front_weights,entries,weights_t
 
 def alg(entries,target,weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m):
         
-    
+    correct = 0
     while True:
         first_hidden_layer = [1] + activation_function(multiply_matrix(weights_input, entries))
         secnd_hidden_layer = [1] + activation_function(multiply_matrix(weights_inter, first_hidden_layer))
@@ -140,7 +140,10 @@ def alg(entries,target,weights_outpt,weights_inter,weights_input,weights_outpt_m
         
         error = [pow((t - out),2)/2 for t,out in zip(target, output_layer)]
         mean_error = sum(error)/len(error)
-        #
+        
+        if(convert_to_list_int(error) == target):
+            correct = 1
+            
         if(mean_error > 0.1):
             #print(error)
             weights_outpt_updated,delta = update_output_layer(target, output_layer,secnd_hidden_layer,weights_outpt,weights_outpt_m)            
@@ -160,7 +163,7 @@ def alg(entries,target,weights_outpt,weights_inter,weights_input,weights_outpt_m
             weights_input = weights_input_updated
         else:
             break
-    return mean_error,weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m #TEM QUE FICAR FORA DO WHILE
+    return mean_error,weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m,correct #TEM QUE FICAR FORA DO WHILE
 
 
     
@@ -185,17 +188,20 @@ def trainning(data):
     while True:
         
         error_total = 0
+        correct_total = 0
         for cont in range(len(entries)):
             #print("Amostra: ",cont)
-            error,weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m = alg(entries[cont], targets[cont],weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m)
+            error,weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m,correct = alg(entries[cont], targets[cont],weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m)
             error_total = error_total + error
-            
+            correct_total = correct_total + correct
         error_total_m = error_total / len(entries)
         epoch = epoch + 1
         #print("ERROR TOTAL MEDIO: ",error_total_m,last_error)
         if(error_total_m < 0.01 or last_error == error_total_m):
             file_results.write("Ciclos: "+str((epoch)))
             print("Epoca: ",epoch)
+            #print("Erro Médio",error_total_m)
+            print("ACURACIA:",correct_total/len(entries))
             return weights_outpt,weights_inter,weights_input
         last_error = error_total_m
     file_results.write("Ciclos: "+str((epoch)))
@@ -227,7 +233,7 @@ def test_net(data,weights_outpt,weights_inter,weights_input):
         if(result == target):
             cont = cont + 1
         
-    print(cont,len(data))
+    print("RESULTADO:",cont/len(data))
     file_results.write("ACURACIA: "+str((cont/len(data))))
     file_results.write("\n")
         
@@ -239,8 +245,8 @@ def two_layers():
     global N_NEURONE_SECON_LAYER  
     global N_NEURONE_OUTPT_LAYER
     
-    N_NEURONE_FIRST_LAYER = 5
-    N_NEURONE_SECON_LAYER = 2
+    N_NEURONE_FIRST_LAYER = 10
+    N_NEURONE_SECON_LAYER = 10
     N_NEURONE_OUTPT_LAYER = 3
     
     filename = "seeds.txt"
@@ -269,7 +275,7 @@ def two_layers():
 
 
 def alg_one_layer(entries,target,weights_outpt,weights_input,weights_outpt_m,weights_input_m):
-        
+    correct = 0
     
     while True:
         first_hidden_layer = [1] + activation_function(multiply_matrix(weights_input, entries))
@@ -277,7 +283,9 @@ def alg_one_layer(entries,target,weights_outpt,weights_input,weights_outpt_m,wei
         
         error = [pow((t - out),2)/2 for t,out in zip(target, output_layer)]
         mean_error = sum(error)/len(error)
-        #
+        
+        if(convert_to_list_int(error) == target):
+            correct = 1
         if(mean_error > 0.1):
             #print(error)
             weights_outpt_updated,delta = update_output_layer(target, output_layer,first_hidden_layer,weights_outpt,weights_outpt_m)            
@@ -293,7 +301,7 @@ def alg_one_layer(entries,target,weights_outpt,weights_input,weights_outpt_m,wei
             weights_input = weights_input_updated
         else:
             break
-    return mean_error,weights_outpt,weights_input,weights_outpt_m,weights_input_m #TEM QUE FICAR FORA DO WHILE
+    return mean_error,weights_outpt,weights_input,weights_outpt_m,weights_input_m,correct #TEM QUE FICAR FORA DO WHILE
 
 
     
@@ -316,17 +324,20 @@ def trainning_one_layer(data):
     while True:
         
         error_total = 0
+        corret_total = 0
         for cont in range(len(entries)):
             #print("Amostra: ",cont)
-            error,weights_outpt,weights_input,weights_outpt_m,weights_input_m = alg_one_layer(entries[cont], targets[cont],weights_outpt,weights_input,weights_outpt_m,weights_input_m)
+            error,weights_outpt,weights_input,weights_outpt_m,weights_input_m,correct = alg_one_layer(entries[cont], targets[cont],weights_outpt,weights_input,weights_outpt_m,weights_input_m)
             error_total = error_total + error
-            
+            corret_total = corret_total + correct
+            #print("CORRETOS:",corret_total,len(entries))
         error_total_m = error_total / len(entries)
         epoch = epoch + 1
         #print("ERROR TOTAL MEDIO: ",error_total_m,last_error)
         if(error_total_m < 0.01 or last_error == error_total_m):
             file_results.write("Ciclos: "+str((epoch)))
             print("Epoca: ",epoch)
+            print("ACURACIA:",corret_total/len(entries))
             return weights_outpt,weights_input
         last_error = error_total_m
     file_results.write("Ciclos: "+str((epoch)))
@@ -356,7 +367,7 @@ def test_net_one_layer(data,weights_outpt,weights_input):
         if(result == target):
             cont = cont + 1
         
-    print(cont,len(data))
+    print("RESULTADO (%):",cont/len(data))
     file_results.write("ACURACIA: "+str((cont/len(data))))
     file_results.write("\n")     
         
@@ -404,14 +415,14 @@ def one_layer():
     global N_NEURONE_FIRST_LAYER
     global N_NEURONE_OUTPT_LAYER    
     
-    N_NEURONE_FIRST_LAYER = 5
+    N_NEURONE_FIRST_LAYER = 10
     N_NEURONE_OUTPT_LAYER = 3
     
     filename = "seeds.txt"
     
     data = load_data(filename)
     
-    P_TRAIN = 0.75
+    P_TRAIN = 0.7
     size_total = len(data)
     size_train = int(size_total*P_TRAIN)
     train = data[0:size_train]
@@ -436,7 +447,13 @@ def one_layer():
  
     
 if __name__ == "__main__":
-    two_layers()
+    
+    if(False):
+        print("Duas camadas intermediarias")
+        two_layers()
+    else:
+        print("Uma camada intermediaria")
+        one_layer()
     
 ''' 
 #IMPLEMENTAÇÃO DO X_FOLD

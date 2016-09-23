@@ -1,4 +1,6 @@
+Numero de camadas: 1
+
 Nome do arquivo: seeds.txt
-5 2 3
-BASE DE TREINO (%):0.75
-Ciclos: 26ACURACIA: 0.7169811320754716
+10  3
+BASE DE TREINO (%):0.7
+Ciclos: 62ACURACIA: 0.8253968253968254

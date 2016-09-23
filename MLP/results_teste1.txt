@@ -1,6 +1,6 @@
 Numero de camadas: 1
 
-Nome do arquivo: teste1.txt
-150  1
+Nome do arquivo: seeds.txt
+50  3
 BASE DE TREINO (%):0.75
-Ciclos: 4ERRO QUADRADO MEDIO: 0.0211560374634
+Ciclos: 184ERRO QUADRADO MEDIO: 2.97525807742

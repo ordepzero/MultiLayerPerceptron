@@ -21,7 +21,7 @@ N_NEURONE_FIRST_LAYER = 150
 N_NEURONE_SECON_LAYER = 150
 N_NEURONE_OUTPT_LAYER = 1
 
-file_results = open('results_teste1.txt', 'w')
+file_results = open('results_seeds.txt', 'w')
 
 def inicialize_matrix_zeros(rows, columns):
     grade = [0] * rows
@@ -73,6 +73,24 @@ def calculate_error_total(targets, outs):
      result =  [pow((target - out),2)/2 for target,out in zip(targets, outs)]
      return sum(result)   
  
+def convert_to_bin_class(value):
+    if(value == 1.):
+        return [0, 0, 1]
+    elif(value == 2.):
+        return [0, 1, 0]
+    else:
+        return [1, 0, 0]
+        
+def convert_to_list_int(values):
+    index = 0
+    new_values = [0] * len(values)
+    for i in range(len(values)):
+        if(values[i] > values[index]):
+            index = i
+    new_values[index] = 1
+    
+    return new_values
+    
 def update_output_layer(targets, outputs,entries, weights, weights_m):    
     #DELTA = -(TARGET - OUT) * OUT*(1 - OUT)
     derivative_total_error = [-(target-out) for target,out in zip(targets, outputs)]
@@ -100,7 +118,7 @@ def update_hidden_layer(delta_in, front_entries, front_weights,entries,weights_t
     front_entries = front_entries[1:]
     front_weights = [x[1:] for x in front_weights]
     
-    #print(len(front_weights))    
+    #[[print(delta_in[d],fw,delta_in[d]*fw) for fw in front_weights[d]] for d in range(len(delta_in))] 
     
     delta = [[delta_in[d]*fw for fw in front_weights[d]] for d in range(len(delta_in))] 
     
@@ -112,18 +130,156 @@ def update_hidden_layer(delta_in, front_entries, front_weights,entries,weights_t
     return weights_updated,delta
 
 
-def alg_one_layer(entries,target,weights_outpt,weights_input,weights_outpt_m,weights_input_m):
-    mean_error = 0    
+def alg(entries,target,weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m):
+        
+    
     while True:
         first_hidden_layer = [1] + activation_function(multiply_matrix(weights_input, entries))
-        output_layer = activation_function(multiply_matrix(weights_outpt, first_hidden_layer))
-        
-        #print("--#",len(weights_outpt),"#",len(first_hidden_layer),"#--",output_layer,target)                
+        secnd_hidden_layer = [1] + activation_function(multiply_matrix(weights_inter, first_hidden_layer))
+        output_layer = activation_function(multiply_matrix(weights_outpt, secnd_hidden_layer))
         
         error = [pow((t - out),2)/2 for t,out in zip(target, output_layer)]
         mean_error = sum(error)/len(error)
         #
         if(mean_error > 0.1):
+            #print(error)
+            weights_outpt_updated,delta = update_output_layer(target, output_layer,secnd_hidden_layer,weights_outpt,weights_outpt_m)            
+            weights_inter_updated,delta = update_hidden_layer(delta,secnd_hidden_layer,weights_outpt,first_hidden_layer,weights_inter,weights_inter_m)
+            weights_input_updated,delta = update_hidden_layer(delta,first_hidden_layer,weights_inter,entries,weights_input,weights_input_m)
+            
+            weights_outpt_updatedt = np.array(weights_outpt_updated)
+            weights_inter_updatedt = np.array(weights_inter_updated)
+            weights_input_updatedt = np.array(weights_input_updated)
+            
+            weights_outpt_m = weights_outpt_updatedt - weights_outpt
+            weights_inter_m = weights_inter_updatedt - weights_inter
+            weights_input_m = weights_input_updatedt - weights_input
+            
+            weights_outpt = weights_outpt_updated
+            weights_inter = weights_inter_updated
+            weights_input = weights_input_updated
+        else:
+            break
+    return mean_error,weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m #TEM QUE FICAR FORA DO WHILE
+
+
+    
+def trainning(data):
+    entries = data[:,:-1] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA
+    targets = data[:,-1] #COPIAR ULTIMA COLUNA
+    entries = [np.append(1, x)  for x in entries]  
+    
+    targets = [convert_to_bin_class(t) for t in targets]
+    
+    weights_input = (np.random.random((N_NEURONE_FIRST_LAYER,len(entries[0]))) - 0.5) * 2
+    weights_inter = (np.random.random((N_NEURONE_SECON_LAYER,1 + N_NEURONE_FIRST_LAYER)) - 0.5) * 2
+    weights_outpt = (np.random.random((N_NEURONE_OUTPT_LAYER,1 + N_NEURONE_SECON_LAYER)) - 0.5) * 2
+    
+    #WEOGHTS TO MOMENTUM
+    weights_input_m = inicialize_matrix_zeros(N_NEURONE_FIRST_LAYER,len(entries[0]))
+    weights_inter_m = inicialize_matrix_zeros(N_NEURONE_SECON_LAYER,1 + N_NEURONE_FIRST_LAYER)
+    weights_outpt_m = inicialize_matrix_zeros(N_NEURONE_OUTPT_LAYER,1 + N_NEURONE_SECON_LAYER)
+    
+    epoch = 0
+    last_error = 0
+    while True:
+        
+        error_total = 0
+        for cont in range(len(entries)):
+            #print("Amostra: ",cont)
+            error,weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m = alg(entries[cont], targets[cont],weights_outpt,weights_inter,weights_input,weights_outpt_m,weights_inter_m,weights_input_m)
+            error_total = error_total + error
+            
+        error_total_m = error_total / len(entries)
+        epoch = epoch + 1
+        #print("ERROR TOTAL MEDIO: ",error_total_m,last_error)
+        if(error_total_m < 0.01 or last_error == error_total_m):
+            file_results.write("Ciclos: "+str((epoch)))
+            print("Epoca: ",epoch)
+            return weights_outpt,weights_inter,weights_input
+        last_error = error_total_m
+    file_results.write("Ciclos: "+str((epoch)))
+    return weights_outpt,weights_inter,weights_input
+
+
+
+def calculate_output(entries,weights_outpt,weights_inter,weights_input):
+    first_hidden_layer = [1] + activation_function(multiply_matrix(weights_input, entries))
+    secnd_hidden_layer = [1] + activation_function(multiply_matrix(weights_inter, first_hidden_layer))
+    output_layer = activation_function(multiply_matrix(weights_outpt, secnd_hidden_layer))
+
+    return output_layer
+        
+    
+def test_net(data,weights_outpt,weights_inter,weights_input):
+    data = np.array(data)
+
+    entries = data[:,:-1] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA
+    targets = data[:,-1] #COPIAR ULTIMA COLUNA
+    entries = [np.append(1, x)  for x in entries]
+    targets = [convert_to_bin_class(t) for t in targets]
+    cont = 0
+    
+    for entry,target in zip(entries,targets):
+        result = calculate_output(entry,weights_outpt,weights_inter,weights_input)
+        
+        result = convert_to_list_int(result)
+        if(result == target):
+            cont = cont + 1
+        
+    print(cont,len(data))
+    file_results.write("ACURACIA: "+str((cont/len(data))))
+    file_results.write("\n")
+        
+    return "FIM"
+    
+
+def two_layers():
+    global N_NEURONE_FIRST_LAYER
+    global N_NEURONE_SECON_LAYER  
+    global N_NEURONE_OUTPT_LAYER
+    
+    N_NEURONE_FIRST_LAYER = 5
+    N_NEURONE_SECON_LAYER = 2
+    N_NEURONE_OUTPT_LAYER = 3
+    
+    filename = "seeds.txt"
+
+    data = load_data(filename)
+    
+    P_TRAIN = 0.75
+    size_total = len(data)
+    size_train = int(size_total*P_TRAIN)
+    train = data[0:size_train]
+    test  = data[size_train:]
+    
+    #ARMAZENANDO RESULTADOS
+    file_results.write("Nome do arquivo: "+filename)
+    file_results.write("\n")
+    file_results.write(str((str(N_NEURONE_FIRST_LAYER)+" "+str(N_NEURONE_SECON_LAYER)+" "+str(N_NEURONE_OUTPT_LAYER))))
+    file_results.write("\n")    
+    file_results.write("BASE DE TREINO (%):"+str((P_TRAIN)))    
+    file_results.write("\n")    
+
+    weights_outpt,weights_inter,weights_input = trainning(train)
+    test_net(test,weights_outpt,weights_inter,weights_input)
+    
+    file_results.close()
+    print("FUNCAO MAIN")
+
+
+def alg_one_layer(entries,target,weights_outpt,weights_input,weights_outpt_m,weights_input_m):
+        
+    
+    while True:
+        first_hidden_layer = [1] + activation_function(multiply_matrix(weights_input, entries))
+        output_layer = activation_function(multiply_matrix(weights_outpt, first_hidden_layer))
+        
+        error = [pow((t - out),2)/2 for t,out in zip(target, output_layer)]
+        mean_error = sum(error)/len(error)
+        #
+        if(mean_error > 0.1):
+            #print(error)
             weights_outpt_updated,delta = update_output_layer(target, output_layer,first_hidden_layer,weights_outpt,weights_outpt_m)            
             weights_input_updated,delta = update_hidden_layer(delta,first_hidden_layer,weights_outpt,entries,weights_input,weights_input_m)
             
@@ -139,15 +295,8 @@ def alg_one_layer(entries,target,weights_outpt,weights_input,weights_outpt_m,wei
             break
     return mean_error,weights_outpt,weights_input,weights_outpt_m,weights_input_m #TEM QUE FICAR FORA DO WHILE
 
-def convert_to_bin_class(value):
-    if(value == 1.):
-        return [0, 0, 1]
-    elif(value == 2.):
-        return [0, 1, 0]
-    else:
-        return [1, 0, 0]
-        
-        
+
+    
 def trainning_one_layer(data):
     entries = data[:,:-1] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA
     targets = data[:,-1] #COPIAR ULTIMA COLUNA
@@ -182,7 +331,7 @@ def trainning_one_layer(data):
         last_error = error_total_m
     file_results.write("Ciclos: "+str((epoch)))
     return weights_outpt,weights_input
-    
+
 
 
 def calculate_output_one_layer(entries,weights_outpt,weights_input):
@@ -198,40 +347,75 @@ def test_net_one_layer(data,weights_outpt,weights_input):
     entries = data[:,:-1] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA
     targets = data[:,-1] #COPIAR ULTIMA COLUNA
     entries = [np.append(1, x)  for x in entries]
+    targets = [convert_to_bin_class(t) for t in targets]
     cont = 0
-    error_total = 0
-    for entry,target in zip(entries,targets):
-        cont = cont + 1    
+    
+    for entry,target in zip(entries,targets): 
         result = calculate_output_one_layer(entry,weights_outpt,weights_input)
-        error = pow(target - result,2)/2
-        error_total = error_total + error
-        #print(cont,result,target,error)
+        result = convert_to_list_int(result)
+        if(result == target):
+            cont = cont + 1
         
-    file_results.write("ERRO QUADRADO MEDIO: "+str((error_total[0]/cont)))
+    print(cont,len(data))
+    file_results.write("ACURACIA: "+str((cont/len(data))))
     file_results.write("\n")     
-    print("ERRO QUADRATICO MEDIO:",error_total,error_total/cont)
         
     return "FIM"
     
+def class_index(values,value):
+    for i in range(len(values)):
+        if(values[i] == value):
+            return i;
 
-def one_layers():
-    global N_NEURONE_FIRST_LAYER
-    global N_NEURONE_OUTPT_LAYER
+def load_data(filename):
+    n_class = [1.,2.,3.]
+    data_alternated = []
     
-    N_NEURONE_FIRST_LAYER = 50
+    data = normalize_data(put_file_int_array(filename))
+    
+    P_TRAIN = 0.75
+    size_total = len(data)
+    size_train = int(size_total*P_TRAIN)
+    size_each_class = int(size_train / len(n_class))
+    
+    print(size_train,size_each_class)
+    
+    index = 0
+    for x in range(len(data)):   
+        c = n_class[index]
+        for i in data:            
+            if(i[-1] == c):
+                #print("IGUAL",i[-1],c,n_class[-1])
+                i[-1] = i[-1] * -1
+                data_alternated.append(i)
+                if(c == n_class[-1]):
+                    c = n_class[0]
+                    index = -1
+                
+                index = index + 1
+                c = n_class[index]
+
+    data_alternated = np.array(data_alternated)
+    data_alternated[:,-1] *= -1
+    
+    return data_alternated 
+    
+def one_layer():
+    global N_NEURONE_FIRST_LAYER
+    global N_NEURONE_OUTPT_LAYER    
+    
+    N_NEURONE_FIRST_LAYER = 5
     N_NEURONE_OUTPT_LAYER = 3
     
     filename = "seeds.txt"
-
-    data = normalize_data(put_file_int_array(filename))
+    
+    data = load_data(filename)
     
     P_TRAIN = 0.75
     size_total = len(data)
     size_train = int(size_total*P_TRAIN)
     train = data[0:size_train]
     test  = data[size_train:]
-    
-
     
     #ARMAZENANDO RESULTADOS
     file_results.write("Numero de camadas: 1\n")
@@ -243,18 +427,16 @@ def one_layers():
     file_results.write("BASE DE TREINO (%):"+str((P_TRAIN)))    
     file_results.write("\n")    
 
-    #print(data[:,-1])
-
     weights_outpt,weights_input = trainning_one_layer(train)
     test_net_one_layer(test,weights_outpt,weights_input)
     
     file_results.close()
     print("FUNCAO MAIN")
 
-
+ 
     
 if __name__ == "__main__":
-    one_layers()
+    two_layers()
     
 ''' 
 #IMPLEMENTAÇÃO DO X_FOLD

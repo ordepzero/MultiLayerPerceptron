@@ -10,8 +10,8 @@ import numpy as np
 
 
 CONT_LEARNING = 0.25
-P_TRAIN = 0.75
-ALFA = 0.1
+P_TRAIN = 0.7
+ALFA = 0.5
 
 weights_input = []#MATRIZ DE PESOS DA CAMADA DE ENTRADA
 weights_inter = []#MATRIZ DE PESOS DA CAMADA INTERMEDIATIA
@@ -208,7 +208,7 @@ def test_net(data,weights_outpt,weights_inter,weights_input):
         
     file_results.write("ERRO QUADRADO MEDIO: "+str((error_total[0]/cont)))
     file_results.write("\n")     
-    print("ERRO QUADRATICO MEDIO:",error_total,error_total/cont)
+    print("ERRO QUADRATICO MEDIO:",error_total/cont)
         
     return "FIM"
     
@@ -222,11 +222,16 @@ def two_layers():
 
     data = normalize_data(put_file_int_array(filename),False)
     
-    P_TRAIN = 0.75
+    P_TRAIN = 0.9
     size_total = len(data)
     size_train = int(size_total*P_TRAIN)
     train = data[0:size_train]
     test  = data[size_train:]
+    
+    print("Numero de neuronios:",N_NEURONE_FIRST_LAYER)   
+    print("Tamanho da base:",P_TRAIN," (%) ,",size_train)
+    print("APrendizagem:",CONT_LEARNING)
+    print("Momentum:",ALFA)      
     
     #ARMAZENANDO RESULTADOS
     file_results.write("Nome do arquivo: "+filename)
@@ -239,7 +244,7 @@ def two_layers():
     weights_outpt,weights_inter,weights_input = trainning(train)
     test_net(test,weights_outpt,weights_inter,weights_input)
     
-    file_results.close()
+    #file_results.close()
     print("FUNCAO MAIN")
 
 
@@ -331,20 +336,20 @@ def test_net_one_layer(data,weights_outpt,weights_input):
         
     file_results.write("ERRO QUADRADO MEDIO: "+str((error_total[0]/cont)))
     file_results.write("\n")     
-    print("ERRO QUADRATICO MEDIO:",error_total,error_total/cont)
+    print("ERRO QUADRATICO MEDIO:",error_total/cont)
         
     return "FIM"
     
 
 def one_layers():
-    N_NEURONE_FIRST_LAYER = 150
+    N_NEURONE_FIRST_LAYER = 50
     N_NEURONE_OUTPT_LAYER = 1
     
     filename = "teste1.txt"
 
     data = normalize_data(put_file_int_array(filename),False)
     
-    P_TRAIN = 0.75
+    P_TRAIN = 0.90
     size_total = len(data)
     size_train = int(size_total*P_TRAIN)
     train = data[0:size_train]
@@ -363,11 +368,20 @@ def one_layers():
     weights_outpt,weights_input = trainning_one_layer(train)
     test_net_one_layer(test,weights_outpt,weights_input)
     
-    file_results.close()
+    #file_results.close()
     print("FUNCAO MAIN")
     
 if __name__ == "__main__":
-    one_layers()
+    
+    for x in range(5):
+        if(True):
+            print("Numero de camadas intermediarias: 2")
+            two_layers()
+        else:
+            print("Numero de camadas intermediarias: 1")
+            one_layers()
+        print("\n\n")
+    file_results.close()
     
 ''' 
 #IMPLEMENTAÇÃO DO X_FOLD

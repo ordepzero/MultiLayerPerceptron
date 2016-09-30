@@ -55,31 +55,31 @@ def tangente_hyperbolique(a):
     return (math.tanh(a))
 
 def logistic(value):
+    #print("_",value)
     return 1/(1+math.exp(-value))
     
 def multiply_matrix(m, c):
     m = np.array(m)
     c = np.array(c)
     r = m * c
-    #print(r)
-    return (np.sum(r,axis=1).tolist())
+    result = np.sum(r,axis=1).tolist()
+    #print("<",len(result),">")
+    return (result)
     
 def activation_function(values):
-   values = [ logistic(v) for v in values]
-   #print(values)
-   return values
+    values = [ logistic(v) for v in values]
+    #print(values)
+    return values
     
 def calculate_error_total(targets, outs):
-     result =  [pow((target - out),2)/2 for target,out in zip(targets, outs)]
-     return sum(result)   
+    result =  [pow((target - out),2)/2 for target,out in zip(targets, outs)]
+    return sum(result)   
  
-def update_output_layer(targets, outputs,entries, weights, weights_m):    
-    #DELTA = -(TARGET - OUT) * OUT*(1 - OUT)
+def update_output_layer(targets, outputs,entries, weights, weights_m,act_pots):  
+    #print(outputs,act_pots)
     derivative_total_error = [-(target-out) for target,out in zip(targets, outputs)]
-    derivative_log_function= [out*(1-out) for out in outputs]
+    derivative_log_function= [act_pot*(1-act_pot) for act_pot in outputs]
     delta = [error*log for error,log in zip(derivative_total_error, derivative_log_function)]
-    #print("-> ",targets," ", outputs," ",entries," ", weights)
-    #print("DELTA:",delta)
     
     weights_updated = [[0 for x in range(len(weights[y]))] for y in range(len(weights))] 
     
@@ -93,7 +93,7 @@ def update_output_layer(targets, outputs,entries, weights, weights_m):
     return weights_updated,delta
 
 
-def update_hidden_layer(delta_in, front_entries, front_weights,entries,weights_to_update, weights_m):
+def update_hidden_layer(delta_in, front_entries, front_weights,entries,weights_to_update, weights_m,act_pots):
     
     #print(front_entries)    
     
@@ -145,20 +145,20 @@ def alg(entries,target,weights_outpt,weights_inter,weights_input,weights_outpt_m
 
 
     
-def trainning(data):
+def trainning(data,n_first_layer,n_secon_layer,n_output_layer):
     entries = data[:,:-1] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA
     targets = data[:,-1] #COPIAR ULTIMA COLUNA
     entries = [np.append(1, x)  for x in entries]  
     
     
-    weights_input = (np.random.random((N_NEURONE_FIRST_LAYER,len(entries[0]))) - 0.5) * 2
-    weights_inter = (np.random.random((N_NEURONE_SECON_LAYER,1 + N_NEURONE_FIRST_LAYER)) - 0.5) * 2
-    weights_outpt = (np.random.random((N_NEURONE_OUTPT_LAYER,1 + N_NEURONE_SECON_LAYER)) - 0.5) * 2
+    weights_input = (np.random.random((n_first_layer,len(entries[0]))) - 0.5) * 2
+    weights_inter = (np.random.random((n_secon_layer,1 + n_first_layer)) - 0.5) * 2
+    weights_outpt = (np.random.random((n_output_layer,1 + n_secon_layer)) - 0.5) * 2
     
     #WEOGHTS TO MOMENTUM
-    weights_input_m = inicialize_matrix_zeros(N_NEURONE_FIRST_LAYER,len(entries[0]))
-    weights_inter_m = inicialize_matrix_zeros(N_NEURONE_SECON_LAYER,1 + N_NEURONE_FIRST_LAYER)
-    weights_outpt_m = inicialize_matrix_zeros(N_NEURONE_OUTPT_LAYER,1 + N_NEURONE_SECON_LAYER)
+    weights_input_m = inicialize_matrix_zeros(n_first_layer,len(entries[0]))
+    weights_inter_m = inicialize_matrix_zeros(n_secon_layer,1 + n_first_layer)
+    weights_outpt_m = inicialize_matrix_zeros(n_output_layer,1 + n_secon_layer)
     
     epoch = 0
     last_error = 0
@@ -241,7 +241,7 @@ def two_layers():
     file_results.write("BASE DE TREINO (%):"+str((P_TRAIN)))    
     file_results.write("\n")    
 
-    weights_outpt,weights_inter,weights_input = trainning(train)
+    weights_outpt,weights_inter,weights_input = trainning(train,N_NEURONE_FIRST_LAYER,N_NEURONE_SECON_LAYER,N_NEURONE_OUTPT_LAYER)
     test_net(test,weights_outpt,weights_inter,weights_input)
     
     #file_results.close()
@@ -252,15 +252,18 @@ def alg_one_layer(entries,target,weights_outpt,weights_input,weights_outpt_m,wei
         
     
     while True:
-        first_hidden_layer = [1] + activation_function(multiply_matrix(weights_input, entries))
-        output_layer = activation_function(multiply_matrix(weights_outpt, first_hidden_layer))
+        act_pot1 = multiply_matrix(weights_input, entries)
+        first_hidden_layer = [1] + activation_function(act_pot1)
+        act_pot2 = multiply_matrix(weights_outpt, first_hidden_layer)
+        #print("<",weights_outpt,">")
+        output_layer = activation_function(act_pot2)
         
         target = [0] + target
         error = pow(output_layer - target,2)/2.0
         if(error > 0.1):
             #print(error)
-            weights_outpt_updated,delta = update_output_layer(target, output_layer,first_hidden_layer,weights_outpt,weights_outpt_m)            
-            weights_input_updated,delta = update_hidden_layer(delta,first_hidden_layer,weights_outpt,entries,weights_input,weights_input_m)
+            weights_outpt_updated,delta = update_output_layer(target, output_layer,first_hidden_layer,weights_outpt,weights_outpt_m,act_pot2)            
+            weights_input_updated,delta = update_hidden_layer(delta,first_hidden_layer,weights_outpt,entries,weights_input,weights_input_m,act_pot1)
             
             weights_outpt_updatedt = np.array(weights_outpt_updated)
             weights_input_updatedt = np.array(weights_input_updated)
@@ -276,18 +279,18 @@ def alg_one_layer(entries,target,weights_outpt,weights_input,weights_outpt_m,wei
 
 
     
-def trainning_one_layer(data):
+def trainning_one_layer(data,n_first_layer,n_output_layer):
     entries = data[:,:-1] #COPIAR TODAS AS COLUNAS MENOS A ULTIMA
     targets = data[:,-1] #COPIAR ULTIMA COLUNA
     entries = [np.append(1, x)  for x in entries]  
     
     
-    weights_input = (np.random.random((N_NEURONE_FIRST_LAYER,len(entries[0]))) - 0.5) * 2
-    weights_outpt = (np.random.random((N_NEURONE_OUTPT_LAYER,1 + N_NEURONE_FIRST_LAYER)) - 0.5) * 2
+    weights_input = (np.random.random((n_first_layer,len(entries[0]))) - 0.5) * 2
+    weights_outpt = (np.random.random((n_output_layer,1 + n_first_layer)) - 0.5) * 2
     
     #WEOGHTS TO MOMENTUM
-    weights_input_m = inicialize_matrix_zeros(N_NEURONE_FIRST_LAYER,len(entries[0]))
-    weights_outpt_m = inicialize_matrix_zeros(N_NEURONE_OUTPT_LAYER,1 + N_NEURONE_FIRST_LAYER)
+    weights_input_m = inicialize_matrix_zeros(n_first_layer,len(entries[0]))
+    weights_outpt_m = inicialize_matrix_zeros(n_output_layer,1 + n_first_layer)
     
     epoch = 0
     last_error = 0
@@ -342,7 +345,7 @@ def test_net_one_layer(data,weights_outpt,weights_input):
     
 
 def one_layers():
-    N_NEURONE_FIRST_LAYER = 50
+    N_NEURONE_FIRST_LAYER = 3
     N_NEURONE_OUTPT_LAYER = 1
     
     filename = "teste1.txt"
@@ -365,7 +368,7 @@ def one_layers():
     file_results.write("BASE DE TREINO (%):"+str((P_TRAIN)))    
     file_results.write("\n")    
 
-    weights_outpt,weights_input = trainning_one_layer(train)
+    weights_outpt,weights_input = trainning_one_layer(train,N_NEURONE_FIRST_LAYER,N_NEURONE_OUTPT_LAYER)
     test_net_one_layer(test,weights_outpt,weights_input)
     
     #file_results.close()
@@ -374,7 +377,7 @@ def one_layers():
 if __name__ == "__main__":
     
     for x in range(5):
-        if(True):
+        if(False):
             print("Numero de camadas intermediarias: 2")
             two_layers()
         else:

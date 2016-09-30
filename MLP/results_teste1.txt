@@ -1,20 +1,30 @@
+Numero de camadas: 1
+
 Nome do arquivo: teste1.txt
-150 150 1
+3  1
 BASE DE TREINO (%):0.9
-Ciclos: 13ERRO QUADRADO MEDIO: 0.0124319099872
+Ciclos: 21ERRO QUADRADO MEDIO: 0.0211186848143
+Numero de camadas: 1
+
 Nome do arquivo: teste1.txt
-150 150 1
+3  1
 BASE DE TREINO (%):0.9
-Ciclos: 22ERRO QUADRADO MEDIO: 0.0125355306044
+Ciclos: 12ERRO QUADRADO MEDIO: 0.0229705978132
+Numero de camadas: 1
+
 Nome do arquivo: teste1.txt
-150 150 1
+3  1
 BASE DE TREINO (%):0.9
-Ciclos: 19ERRO QUADRADO MEDIO: 0.0116768700998
+Ciclos: 14ERRO QUADRADO MEDIO: 0.0233453640932
+Numero de camadas: 1
+
 Nome do arquivo: teste1.txt
-150 150 1
+3  1
 BASE DE TREINO (%):0.9
-Ciclos: 20ERRO QUADRADO MEDIO: 0.0127757438379
+Ciclos: 20ERRO QUADRADO MEDIO: 0.0189159678312
+Numero de camadas: 1
+
 Nome do arquivo: teste1.txt
-150 150 1
+3  1
 BASE DE TREINO (%):0.9
-Ciclos: 11ERRO QUADRADO MEDIO: 0.0111491472718
+Ciclos: 15ERRO QUADRADO MEDIO: 0.0206856089673

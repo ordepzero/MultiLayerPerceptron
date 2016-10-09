@@ -1,38 +1,47 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Sep 29 23:29:04 2016
+Created on Fri Sep 30 02:56:42 2016
 
 @author: PeDeNRiQue
 """
-
+import numpy as np
 import file_functions as file_f
 import pre_processing as pre_proc
-import numpy as np
 
-from pybrain.datasets            import ClassificationDataSet
-from pybrain.utilities           import percentError
-from pybrain.supervised.trainers import BackpropTrainer
 
+from pybrain.utilities import percentError
+from pybrain.datasets  import ClassificationDataSet
 from pybrain.structure import FeedForwardNetwork
 from pybrain.structure import SigmoidLayer
 from pybrain.structure import FullConnection
+from pybrain.supervised.trainers import BackpropTrainer
 
+filename = "iris.txt"
+dic = {'Iris-setosa\n': 0, 'Iris-versicolor\n': 1, 'Iris-virginica\n': '2'}
 
-filename = "seeds.txt"
-data = pre_proc.normalize_data(file_f.put_file_int_array(filename))    
+file = file_f.read_file(filename)
+file = file_f.change_class_name(file,dic)
+file = file_f.str_to_number(file)
+file_array = np.array(file)
+data = pre_proc.normalize_data(file_array)
+
+data = file_f.order_data(data)
+
+#print(data)
+
 train_data_temp,test_data_temp = pre_proc.train_test_data(data)
 
-train_data = ClassificationDataSet(7, nb_classes=3)
-test_data  = ClassificationDataSet(7, nb_classes=3)
+train_data = ClassificationDataSet(4, nb_classes=3)
+test_data  = ClassificationDataSet(4, nb_classes=3)
 
 cont = 0
 for n in range(0, len(train_data_temp)):
-    train_data.addSample( train_data_temp[n][:-1], [train_data_temp[n][-1]-1])
+    train_data.addSample( train_data_temp[n][:-1], [train_data_temp[n][-1]])
     #print(train_data.getSample(cont))
     #cont = cont + 1
 
 for n in range(0, len(test_data_temp)):
-    test_data.addSample( test_data_temp[n][:-1], [test_data_temp[n][-1]-1])
+    test_data.addSample( test_data_temp[n][:-1], [test_data_temp[n][-1]])
 
 
 train_data._convertToOneOfMany( )
@@ -69,7 +78,7 @@ network.sortModules()
 trainer = BackpropTrainer( network, dataset=train_data, momentum=0.2, verbose=True, weightdecay=0.5)
 
 for i in range(1):
-    trainer.trainEpochs( 5)
+    trainer.trainEpochs( 100)
     trnresult = percentError( trainer.testOnClassData(),
                               train_data['class'] )
     tstresult = percentError( trainer.testOnClassData(
@@ -78,20 +87,3 @@ for i in range(1):
     print ("epoch: %4d" % trainer.totalepochs, \
           "  train error: %5.2f%%" % trnresult, \
           "  test error: %5.2f%%" % tstresult)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

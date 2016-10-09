@@ -12,6 +12,6 @@ import math
 
 
 #log de 100 base 2 => math.log(100,2)
-r = math.log(100,2)
+r = abs(-1.2)
 
 print(r)

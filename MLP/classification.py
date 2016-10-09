@@ -384,7 +384,8 @@ def class_index(values,value):
             return i;
 
 def load_data(filename):
-    n_class = [1.,2.,3.]
+    #n_class = [1.,2.,3.] #VERSAO ORIGINAL
+    n_class = [0.,1.,2.]
     data_alternated = []
     
     data = normalize_data(put_file_int_array(filename))

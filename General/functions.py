@@ -27,3 +27,10 @@ def func_logistic(value):
 
 def func_linear(value):
     return value
+    
+def hamming_distance(s1, s2):
+    assert len(s1) == len(s2)
+    return sum(ch1 != ch2 for ch1, ch2 in zip(s1, s2))
+    
+    
+print(math.sqrt(1))

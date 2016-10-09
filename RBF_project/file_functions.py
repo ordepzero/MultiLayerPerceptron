@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Sep 29 19:35:38 2016
+Created on Thu Oct  6 16:55:16 2016
 
 @author: PeDeNRiQue
 """
@@ -17,13 +17,13 @@ def put_file_int_array(filename):
     return np.array(array);
     
     
-def read_file(filename):
+def read_file(filename,separator):
     array = []
     
     with open(filename,"r") as f:
         content = f.readlines()
         for line in content: # read rest of lines
-            array.append([x for x in line.split(",")])   
+            array.append([x for x in line.split(separator)])   
     return np.array(array);
     
 def change_class_name(data,dic):
